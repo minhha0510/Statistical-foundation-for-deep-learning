@@ -1,0 +1,142 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\title{Mechanistic Fundamentals of Deep Learning}
+\author{Notes for Transitioning Epidemiologist}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{1. The Notation Shift: Statistics vs. Deep Learning}
+In Deep Learning (DL), standard statistical regression is often "rotated" to handle high-dimensional vector operations efficiently.
+
+\subsection{The Bias Trick (Augmentation)}
+To perform a single matrix multiplication, we absorb the bias term $b$ into the weight vector and augment the input vector with a 1.
+
+\begin{equation}
+    y = ax + b \quad \longrightarrow \quad f(x) = \underbrace{[b, a^T]}_{w^T} \underbrace{\begin{bmatrix} 1 \\ x \end{bmatrix}}_{\phi(x)}
+\end{equation}
+
+\begin{itemize}
+    \item \textbf{$w$}: The learnable parameters (weights + bias).
+    \item \textbf{$\phi(x)$}: The \textit{basis function} or \textit{feature map}. In simple regression, $\phi(x) = [1, x]^T$. In polynomial regression, $\phi(x) = [1, x, x^2]^T$.
+\end{itemize}
+
+\subsection{Data Matrix Orientation}
+Classical statistics defines the design matrix $X$ with samples as \textbf{rows}. DL notation often defines $\Phi$ with samples as \textbf{columns}.
+\begin{align*}
+    \text{Stats:} & \quad X \in \mathbb{R}^{N \times D} \\
+    \text{DL:} & \quad \Phi \in \mathbb{R}^{D \times N} \quad (\text{effectively } \Phi = X^T)
+\end{align*}
+This explains the closed-form solution discrepancy:
+\begin{equation}
+    w^*_{\text{stats}} = (X^T X)^{-1} X^T y \quad \iff \quad w^*_{\text{DL}} = (\Phi \Phi^T)^{-1} \Phi y
+\end{equation}
+
+\section{2. Loss and Gradient Mechanics}
+We define the Mean Squared Error (MSE) loss with a factor of $\frac{1}{2}$ to simplify the derivative.
+
+\begin{equation}
+    \mathcal{L}(w) = \frac{1}{2} \sum_{i=1}^{N} (w^T \phi(x_i) - y_i)^2
+\end{equation}
+
+\subsection{Gradient Descent Step (Chain Rule)}
+To update weights, we find $\nabla_w \mathcal{L}$. Let Error $E = (w^T \phi(x) - y)$.
+\begin{align}
+    \frac{\partial \mathcal{L}}{\partial w} &= \frac{\partial \mathcal{L}}{\partial E} \cdot \frac{\partial E}{\partial w} \\
+    &= E \cdot \phi(x) \\
+    &= (w^T \phi(x) - y) \phi(x)
+\end{align}
+\textbf{Intuition:} The update is proportional to the magnitude of the Error multiplied by the Input that caused it.
+
+\section{3. Regularization: The "Effective" Sample Size}
+High-dimensional feature spaces ($\phi(x)$ where $D > N$) are "illegal" in classical stats due to overfitting. We legitimize them using Regularization, which imposes a \textbf{Prior} on the weights.
+
+\subsection{Bayesian Interpretation}
+\begin{itemize}
+    \item \textbf{Loss Function:} Likelihood of data.
+    \item \textbf{Regularization Term:} Prior distribution of weights.
+    \item \textbf{L2 Regularization (Ridge):} $w \sim \mathcal{N}(0, \sigma^2)$ (Gaussian Prior).
+    \item \textbf{L1 Regularization (Lasso):} $w \sim \text{Laplace}(0, b)$ (Laplacian Prior).
+\end{itemize}
+
+\subsection{Geometric Intuition (The Shape of Constraints)}
+We constrain weights s.t. $||w|| \le C$.
+\begin{itemize}
+    \item \textbf{L2 (Circle):} $\sum w_i^2 \le C$. Smooth constraint. Shrinks weights evenly.
+    \item \textbf{L1 (Diamond):} $\sum |w_i| \le C$. Pointy constraint. Solutions hit the "corners" (axes) first, forcing some $w_i \to 0$ (Sparsity).
+\end{itemize}
+
+\section{4. Neural Network Architecture}
+A neural network is a stack of linear transformations and non-linear activation functions.
+
+\subsection{Why Linear + Linear = Linear}
+Without activation functions, deep networks collapse into a single layer.
+\begin{equation}
+    y = W_2 (W_1 x) = (W_2 W_1) x = W_{new} x
+\end{equation}
+We need a non-linearity $\sigma(\cdot)$ to "fold" the space:
+\begin{equation}
+    y = W_2 \cdot \sigma(W_1 x)
+\end{equation}
+
+\subsection{Vanishing Gradients & Activation Functions}
+Gradients backpropagate via the chain rule as a product of derivatives: $\prod \sigma'(z)$.
+\begin{itemize}
+    \item \textbf{Sigmoid/Tanh:} $\sigma'(z) < 1$ (max 0.25 for Sigmoid). Repeated multiplication drives gradient to 0.
+    \item \textbf{ReLU ($max(0, z)$):} $\sigma'(z) = 1$ for $z>0$. Preserves gradient magnitude perfectly (the "Superconductor").
+\end{itemize}
+
+\section{5. Weight Initialization Mechanics}
+To prevent signal explosion or vanishing at $t=0$, we must scale initial random weights based on the number of inputs $n_{in}$.
+
+\subsection{Variance Preservation}
+We want $Var(y) = Var(x)$. Assuming linear summation $y = \sum w_i x_i$:
+\begin{equation}
+    Var(y) = n_{in} \cdot Var(w) \cdot Var(x) \implies Var(w) = \frac{1}{n_{in}}
+\end{equation}
+
+\subsection{He vs. Xavier Initialization}
+\begin{itemize}
+    \item \textbf{Xavier (Glorot):} For Tanh/Sigmoid/Linear. $Var(w) = \frac{1}{n_{in}}$.
+    \item \textbf{He (Kaiming):} For ReLU. ReLU zeros out half the signal, halving variance. We must double $Var(w)$ to compensate.
+    \begin{equation}
+        Var(w) = \frac{2}{n_{in}}
+    \end{equation}
+\end{itemize}
+
+\section{6. Optimization: Adam vs. SGD}
+In high dimensions, \textbf{Saddle Points} are more common than Local Minima.
+\begin{itemize}
+    \item \textbf{SGD:} Gets stuck at saddle points (gradient $\approx 0$).
+    \item \textbf{Adam:} Uses two mechanisms:
+    \begin{enumerate}
+        \item \textbf{Momentum:} Accumulates velocity to roll through flat regions.
+        \item \textbf{Adaptive Learning Rate:} Tracks variance of gradients. Divides learning rate by variance to prevent instability in steep directions.
+    \end{enumerate}
+\end{itemize}
+
+\section{7. Batch Normalization (BN)}
+Stabilizes learning by enforcing a fixed distribution before activation.
+\begin{equation}
+    \hat{x} = \frac{x - \mu_{batch}}{\sqrt{\sigma^2_{batch} + \epsilon}}
+\end{equation}
+To preserve representational capacity, BN introduces two \textbf{learnable parameters} per neuron:
+\begin{equation}
+    y = \gamma \hat{x} + \beta
+\end{equation}
+\begin{itemize}
+    \item $\gamma$ (Scale) and $\beta$ (Shift) allow the network to "undo" the normalization if the data requires it.
+    \item \textbf{Inference:} Uses running average of $\mu$ and $\sigma$ collected during training.
+\end{itemize}
+
+\end{document}
