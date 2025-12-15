@@ -8,15 +8,15 @@
 
 \geometry{a4paper, margin=1in}
 
-\title{Mechanistic Fundamentals of Deep Learning}
-\author{Notes for Transitioning Epidemiologist}
+\title{Fundamentals of Deep Learning explained mechanistically}
+\author{Notes for Transitioning from traditional statistics}
 \date{\today}
 
 \begin{document}
 
 \maketitle
 
-\section{1. The Notation Shift: Statistics vs. Deep Learning}
+\section{The Notation Shift: Statistics vs. Deep Learning}
 In Deep Learning (DL), standard statistical regression is often "rotated" to handle high-dimensional vector operations efficiently.
 
 \subsection{The Bias Trick (Augmentation)}
@@ -42,7 +42,7 @@ This explains the closed-form solution discrepancy:
     w^*_{\text{stats}} = (X^T X)^{-1} X^T y \quad \iff \quad w^*_{\text{DL}} = (\Phi \Phi^T)^{-1} \Phi y
 \end{equation}
 
-\section{2. Loss and Gradient Mechanics}
+\section{Loss and Gradient Mechanics}
 We define the Mean Squared Error (MSE) loss with a factor of $\frac{1}{2}$ to simplify the derivative.
 
 \begin{equation}
@@ -58,7 +58,7 @@ To update weights, we find $\nabla_w \mathcal{L}$. Let Error $E = (w^T \phi(x) -
 \end{align}
 \textbf{Intuition:} The update is proportional to the magnitude of the Error multiplied by the Input that caused it.
 
-\section{3. Regularization: The "Effective" Sample Size}
+\section{Regularization: The "Effective" Sample Size}
 High-dimensional feature spaces ($\phi(x)$ where $D > N$) are "illegal" in classical stats due to overfitting. We legitimize them using Regularization, which imposes a \textbf{Prior} on the weights.
 
 \subsection{Bayesian Interpretation}
@@ -76,7 +76,7 @@ We constrain weights s.t. $||w|| \le C$.
     \item \textbf{L1 (Diamond):} $\sum |w_i| \le C$. Pointy constraint. Solutions hit the "corners" (axes) first, forcing some $w_i \to 0$ (Sparsity).
 \end{itemize}
 
-\section{4. Neural Network Architecture}
+\section{Neural Network Architecture}
 A neural network is a stack of linear transformations and non-linear activation functions.
 
 \subsection{Why Linear + Linear = Linear}
@@ -89,14 +89,14 @@ We need a non-linearity $\sigma(\cdot)$ to "fold" the space:
     y = W_2 \cdot \sigma(W_1 x)
 \end{equation}
 
-\subsection{Vanishing Gradients & Activation Functions}
+\subsection{Vanishing Gradients and Activation Functions}
 Gradients backpropagate via the chain rule as a product of derivatives: $\prod \sigma'(z)$.
 \begin{itemize}
     \item \textbf{Sigmoid/Tanh:} $\sigma'(z) < 1$ (max 0.25 for Sigmoid). Repeated multiplication drives gradient to 0.
     \item \textbf{ReLU ($max(0, z)$):} $\sigma'(z) = 1$ for $z>0$. Preserves gradient magnitude perfectly (the "Superconductor").
 \end{itemize}
 
-\section{5. Weight Initialization Mechanics}
+\section{Weight Initialization Mechanics}
 To prevent signal explosion or vanishing at $t=0$, we must scale initial random weights based on the number of inputs $n_{in}$.
 
 \subsection{Variance Preservation}
@@ -114,7 +114,7 @@ We want $Var(y) = Var(x)$. Assuming linear summation $y = \sum w_i x_i$:
     \end{equation}
 \end{itemize}
 
-\section{6. Optimization: Adam vs. SGD}
+\section{Optimization: Adam vs. SGD}
 In high dimensions, \textbf{Saddle Points} are more common than Local Minima.
 \begin{itemize}
     \item \textbf{SGD:} Gets stuck at saddle points (gradient $\approx 0$).
@@ -125,7 +125,7 @@ In high dimensions, \textbf{Saddle Points} are more common than Local Minima.
     \end{enumerate}
 \end{itemize}
 
-\section{7. Batch Normalization (BN)}
+\section{Batch Normalization (BN)}
 Stabilizes learning by enforcing a fixed distribution before activation.
 \begin{equation}
     \hat{x} = \frac{x - \mu_{batch}}{\sqrt{\sigma^2_{batch} + \epsilon}}

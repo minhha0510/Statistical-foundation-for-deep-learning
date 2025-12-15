@@ -1,0 +1,78 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\title{Mathematical Foundations of Deep Learning: Regularization \& Information Flow}
+\author{Ha Nguyen}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Vector Norms as "Geometric Size"}
+In physics, we calculate the magnitude of a force vector to know its strength. In Deep Learning, we calculate the "norm" of a weight vector to measure the complexity or "loudness" of a model.
+
+\subsection{The L2 Norm (Euclidean Norm)}
+The L2 norm corresponds to the straight-line distance (the hypotenuse). It is the standard "magnitude" used in physics.
+$$ ||\mathbf{x}||_2 = \sqrt{\sum_{i=1}^{n} x_i^2} = \sqrt{x_1^2 + x_2^2 + \dots + x_n^2} $$
+\begin{itemize}
+    \item \textbf{Geometric Intuition:} Represents the shortest distance between points. Constrains vectors to a circle/sphere.
+    \item \textbf{Physics Analogy:} The total speed of a particle or magnitude of a force.
+    \item \textbf{Deep Learning Role:} Used in \textit{Ridge Regression} and \textit{Weight Decay}. It penalizes large outliers heavily (due to the square term), forcing the model to distribute "importance" across many small weights rather than one massive one.
+\end{itemize}
+
+\subsection{The L1 Norm (Manhattan Norm)}
+The L1 norm corresponds to the distance traveled along a grid (sum of absolute differences).
+$$ ||\mathbf{x}||_1 = \sum_{i=1}^{n} |x_i| = |x_1| + |x_2| + \dots + |x_n| $$
+\begin{itemize}
+    \item \textbf{Geometric Intuition:} Represents distance in a taxicab geometry. Constrains vectors to a diamond shape.
+    \item \textbf{Deep Learning Role:} Used in \textit{Lasso Regression}. It creates \textbf{sparse models} by forcing unimportant weights to become exactly zero. This acts as automatic feature selection.
+\end{itemize}
+
+\section{Regularization: The Tug-of-War}
+Regularization is the mathematical technique of adding a "penalty" to the loss function to prevent overfitting. It balances "fitting the data" against "keeping the model simple."
+
+The General Loss Equation:
+$$ \mathcal{L}_{total} = \underbrace{\mathcal{L}_{data}(\mathbf{y}, \hat{\mathbf{y}})}_{\text{Prediction Error}} + \underbrace{\lambda ||\mathbf{w}||}_{\text{Complexity Penalty}} $$
+
+\begin{itemize}
+    \item \textbf{Prediction Error:} Drives weights $\mathbf{w}$ to whatever value minimizes the difference between truth $\mathbf{y}$ and prediction $\hat{\mathbf{y}}$.
+    \item \textbf{Complexity Penalty:} Drives weights $\mathbf{w}$ towards zero.
+    \item \textbf{$\lambda$ (Lambda):} The regularization strength (hyperparameter). A higher $\lambda$ forces the model to prioritize simplicity over perfect accuracy.
+\end{itemize}
+
+\section{Gradient Clipping: Safety Mechanics}
+Just as we calculate the magnitude of force to ensure a structure doesn't break, we calculate the magnitude of gradients to ensure a neural network doesn't "explode."
+
+\subsection{The Exploding Gradient Problem}
+In deep networks (RNNs, Transformers), gradients can accumulate during backpropagation, resulting in massive updates:
+$$ \mathbf{w}_{new} = \mathbf{w}_{old} - \eta \cdot \mathbf{g} $$
+If $||\mathbf{g}|| \to \infty$, then weights become $NaN$ and training collapses.
+
+\subsection{The Solution: L2 Clipping}
+We explicitly calculate the Euclidean norm of the gradient vector $\mathbf{g}$ and scale it down if it exceeds a threshold $C$.
+$$ \mathbf{g}_{clipped} = \mathbf{g} \cdot \frac{C}{\max(C, ||\mathbf{g}||_2)} $$
+This preserves the \textit{direction} of the update (learning direction) but constrains the \textit{step size} (magnitude) to be safe.
+
+\section{Residual Connections: Vector Addition as Information Flow}
+In physics, the net force is the vector sum of individual forces:
+$$ \mathbf{F}_{net} = \mathbf{F}_1 + \mathbf{F}_2 $$
+In Deep Learning, specifically in Residual Networks (ResNets), we use this exact principle to preserve information flow through deep layers.
+
+\subsection{The Vanishing Signal}
+In a standard chain of layers, information degrades:
+$$ \mathbf{x} \to F_1(\mathbf{x}) \to F_2(F_1(\mathbf{x})) \dots $$
+Gradients diminish as they propagate back through many multiplications (Chain Rule).
+
+\subsection{The Residual Block (Skip Connection)}
+Instead of transforming $x$ entirely, we simply add the transformation to the original signal:
+$$ \mathbf{y} = \mathbf{x} + F(\mathbf{x}) $$
+\begin{itemize}
+    \item \textbf{Physics Analogy:} $\mathbf{x}$ is the initial velocity, and $F(\mathbf{x})$ is the impulse (change in velocity). The new state is the sum of the old state plus the change.
+    \item \textbf{Benefit:} The gradient can "flow" directly through the $+ \mathbf{x}$ path unchanged, solving the vanishing gradient problem and allowing for very deep networks.
+\end{itemize}
+
+\end{document}
